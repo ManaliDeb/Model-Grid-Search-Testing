@@ -1,18 +1,22 @@
 import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, f1_score
+
 
 # load data
-data = pd.read_csv('src/main/resources/train.csv')
+df = pd.read_csv('src/main/resources/train.csv')
 
 # preprocess data
-data['Age'].fillna(data['Age'].mean(), inplace=True)
-data['Embarked'].fillna(data['Embarked'].mode()[0], inplace=True)
-data['Fare'].fillna(data['Fare'].mean(), inplace=True)
-data['Sex'] = data['Sex'].map({'male': 0, 'female': 1})
+category_col = ['Parental_Involvement', 'Access_to_Resources', 'Extracurricular_Activities', 'Internet_Access',
+                'School_Type', 'Peer_Influence', 'Learning_Disabilities', 'Parental_Education_Level', 'Gender']
+df = pd.get_dummies(df, columns=category_col, drop_first=True)
 
-# drop data that isn't relevant
-data.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1, inplace=True)
+remaining_category_col = ['Motivation_Level', 'Family_Income', 'Teacher_Quality', 'Distance_from_Home']
+df = pd.get_dummies(df, columns=remaining_category_col, drop_first=True)
 
-# target features
-X = data[['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked']].copy()
-X['Embarked'] = X['Embarked'].map({'S': 0, 'C': 1, 'Q': 2})
-y = data['Survived'].values
+# convert exam score to binary class
+df['Exam_Score_Binary'] = df['Exam_Score'].apply(lambda x: 1 if x >= 75 else 0)
+X = df.drop(['Exam_Score', 'Exam_Score_Binary'], axis=1).values
+y = df['Exam_Score_Binary'].values
+
