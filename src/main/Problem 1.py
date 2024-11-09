@@ -30,6 +30,7 @@ X_scaled = scaler.fit_transform(X)
 # split data
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.20, random_state=42)
 
+
 # n-fold cross validation
 def cross_validation(model, X, y, n_folds=5):
     fold_size = len(X) // n_folds
@@ -50,5 +51,41 @@ def cross_validation(model, X, y, n_folds=5):
         accuracy_scores.append(accuracy)
 
     return np.mean(accuracy_scores)
+
+
+# grid search
+def grid_search_svm(X, y, param_grid, n_folds=5):
+    best_params = None
+    best_score = 0
+    best_model = None
+
+    # combinations of hyperparams
+    keys, values = zip(*param_grid.items())
+    param_combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
+
+    for params in param_combinations:
+        model = SVC(**params)
+        score = cross_validation(model, X, y, n_folds)
+
+        print(f"Parameters: {params}, Cross-Validation Accuracy: {score:.4f}")
+
+        if score > best_score:
+            best_score = score
+            best_params = params
+            best_model = model
+
+    return best_model, best_params, best_score
+
+
+# param grid for SVM
+svm_param_grid = {
+    'C': [0.01, 0.1, 1, 10, 100],
+    'kernel': ['linear', 'rbf'],
+    'gamma': ['scale', 'auto']
+}
+
+# perform grid search for SVM
+print("\n--- SVM Grid Search ---")
+best_svm_model, best_svm_params, best_svm_score = grid_search_svm(X_train, y_train, svm_param_grid)
 
 
