@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+import itertools
 
 
 # load data
@@ -27,4 +29,26 @@ X_scaled = scaler.fit_transform(X)
 
 # split data
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.20, random_state=42)
+
+# n-fold cross validation
+def cross_validation(model, X, y, n_folds=5):
+    fold_size = len(X) // n_folds
+    indices = np.random.permutation(len(X))
+    accuracy_scores = []
+
+    for fold in range(n_folds):
+        val_indices = indices[fold * fold_size: (fold + 1) * fold_size]
+        train_indices = np.setdiff1d(indices, val_indices)
+
+        X_train_fold, X_val_fold = X[train_indices], X[val_indices]
+        y_train_fold, y_val_fold = y[train_indices], y[val_indices]
+
+        # train model and evaluate on validation set
+        model.fit(X_train_fold, y_train_fold)
+        y_val_pred = model.predict(X_val_fold)
+        accuracy = accuracy_score(y_val_fold, y_val_pred)
+        accuracy_scores.append(accuracy)
+
+    return np.mean(accuracy_scores)
+
 
